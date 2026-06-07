@@ -1,0 +1,875 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Ornament Echoes</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/addons/p5.sound.min.js"></script>
+
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        background: #05070d;
+        font-family: Arial, sans-serif;
+        color: white;
+      }
+
+      canvas {
+        display: block;
+      }
+
+      .about-btn {
+        position: fixed;
+        top: 18px;
+        right: 18px;
+        z-index: 20;
+      }
+
+      .modal-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 30;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(5, 7, 13, 0);
+        backdrop-filter: blur(0px);
+        opacity: 0;
+        pointer-events: none;
+        transition:
+          opacity 0.35s ease,
+          background 0.35s ease,
+          backdrop-filter 0.35s ease;
+      }
+
+      .modal-overlay.active {
+        opacity: 1;
+        pointer-events: auto;
+        background: rgba(5, 7, 13, 0.65);
+        backdrop-filter: blur(8px);
+      }
+
+      .modal {
+        width: min(520px, 90vw);
+        padding: 26px;
+        border-radius: 22px;
+        background: rgba(5, 8, 16, 0.88);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        box-shadow: 0 25px 80px rgba(0, 0, 0, 0.55);
+        color: white;
+
+        transform: scale(0.92) translateY(18px);
+        opacity: 0;
+        transition:
+          transform 0.35s ease,
+          opacity 0.35s ease;
+      }
+
+      .modal-overlay.active .modal {
+        transform: scale(1) translateY(0);
+        opacity: 1;
+      }
+
+      .modal h2 {
+        margin: 0 0 14px;
+        font-size: 18px;
+        letter-spacing: 0.04em;
+      }
+
+      .modal p {
+        margin: 0;
+        font-size: 13px;
+        line-height: 1.6;
+        color: rgba(255, 255, 255, 0.72);
+      }
+
+      .close-btn {
+        position: absolute;
+        top: 18px;
+        right: 22px;
+        font-size: 22px;
+        background: none;
+        border: none;
+        color: white;
+        cursor: pointer;
+      }
+
+      .panel {
+        position: fixed;
+        left: 18px;
+        top: 18px;
+        z-index: 10;
+        width: 310px;
+        padding: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 18px;
+        background: rgba(5, 8, 16, 0.68);
+        backdrop-filter: blur(16px);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+      }
+
+      .panel h1 {
+        margin: 0 0 12px;
+        font-size: 15px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        color: rgba(255, 255, 255, 0.9);
+      }
+
+      .row {
+        margin-bottom: 12px;
+      }
+
+      .row label {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 6px;
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.76);
+      }
+
+      .row input[type="range"] {
+        width: 100%;
+      }
+
+      .buttons {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+
+      button,
+      select {
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.08);
+        color: white;
+        padding: 9px 11px;
+        font-size: 12px;
+        cursor: pointer;
+      }
+
+      button:hover,
+      select:hover {
+        background: rgba(255, 255, 255, 0.14);
+      }
+
+      select {
+        width: 100%;
+        outline: none;
+      }
+
+      select option {
+        background: #2b3448;
+        color: white;
+      }
+
+      .hint {
+        margin-top: 10px;
+        font-size: 11px;
+        line-height: 1.4;
+        color: rgba(255, 255, 255, 0.48);
+      }
+
+      .file {
+        margin-top: 8px;
+        width: 100%;
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.6);
+      }
+    </style>
+  </head>
+
+  <body>
+    <button id="aboutBtn" class="about-btn">About</button>
+
+    <div id="aboutModal" class="modal-overlay">
+      <div class="modal">
+        <button id="closeAbout" class="close-btn">×</button>
+
+        <h2>Ornament Echoes</h2>
+
+        <p>
+          This project explores how traditional Uzbek ornament and geometric
+          patterns can be translated into a responsive digital environment.
+          Using microphone input and generative coding in p5.js, sound is
+          transformed into movement, colour, distortion, and evolving visual
+          patterns. The work investigates how geometry can communicate rhythm,
+          atmosphere, and emotion, allowing ornament to behave less like static
+          decoration and more like a living sensory space.
+        </p>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h1>Audio Ornament Mesh</h1>
+
+      <div class="buttons">
+        <button id="micBtn">Microphone</button>
+        <button id="pauseBtn">Pause</button>
+      </div>
+
+      <div class="row">
+        <label>
+          <span>Quality</span>
+          <span id="qualityText">High</span>
+        </label>
+        <select id="qualitySelect">
+          <option value="Light">Light — 30 FPS</option>
+          <option value="Medium">Medium — 60 FPS</option>
+          <option value="High" selected>High — 120 FPS</option>
+        </select>
+      </div>
+
+      <div class="row">
+        <label>
+          <span>Activation threshold</span>
+          <span id="thresholdText">12</span>
+        </label>
+        <input id="thresholdSlider" type="range" min="0" max="100" value="12" />
+      </div>
+
+      <div class="row">
+        <label>
+          <span>Movement Viscosity</span>
+          <span id="smoothText">80</span>
+        </label>
+        <input id="smoothSlider" type="range" min="0" max="100" value="80" />
+      </div>
+
+      <div class="row">
+        <label>
+          <span>Deformation Force</span>
+          <span id="deformText">82</span>
+        </label>
+        <input id="deformSlider" type="range" min="0" max="100" value="82" />
+      </div>
+
+      <div class="row">
+        <label>
+          <span>Ornament Detailing</span>
+          <span id="detailText">56</span>
+        </label>
+        <input id="detailSlider" type="range" min="0" max="100" value="56" />
+      </div>
+
+      <div class="row">
+        <label>
+          <span>Colour density</span>
+          <span id="colorText">92</span>
+        </label>
+        <input id="colorSlider" type="range" min="0" max="100" value="92" />
+      </div>
+
+      <div class="row">
+        <label>
+          <span>Colour Speed</span>
+          <span id="colorSpeedText">85</span>
+        </label>
+        <input
+          id="colorSpeedSlider"
+          type="range"
+          min="0"
+          max="100"
+          value="85"
+        />
+      </div>
+
+      <input id="fileInput" class="file" type="file" accept="audio/*" />
+
+      <div class="hint">
+        The color is taken according to the dominant frequency: 200 red, 400
+        orange, 600 yellow, 800 green, 1000 blue, 1200 blue, 1400 purple.
+      </div>
+    </div>
+
+    <script>
+      let mic;
+      let soundFile;
+      let fft;
+      let audioStarted = false;
+      let paused = false;
+
+      let points = [];
+      let cells = [];
+
+      let cols;
+      let rows;
+      let cellSize;
+
+      let bassSmooth = 0;
+      let midSmooth = 0;
+      let trebleSmooth = 0;
+      let volumeSmooth = 0;
+
+      let bassMemory = 0;
+      let midMemory = 0;
+      let trebleMemory = 0;
+
+      let toneSmooth = 0;
+      let toneMemory = 0;
+
+      let flowA = 0;
+      let flowB = 0;
+      let flowC = 0;
+
+      let settings = {
+        quality: "high",
+        threshold: 12,
+        smoothness: 80,
+        deformation: 82,
+        detail: 56,
+        colorPower: 92,
+        colorSpeed: 85,
+      };
+
+      const qualityFps = {
+        light: 30,
+        medium: 60,
+        high: 120,
+      };
+
+      function setup() {
+        createCanvas(windowWidth, windowHeight);
+        pixelDensity(1);
+        colorMode(HSB, 360, 100, 100, 100);
+
+        fft = new p5.FFT(0.86, 2048);
+
+        setupUI();
+        applyQuality();
+        buildMesh();
+      }
+
+      function draw() {
+        drawBackground();
+
+        updateAudio();
+        updateFlows();
+        updateMesh();
+        drawCells();
+        drawSoftGlow();
+      }
+
+      function setupUI() {
+        const micBtn = document.getElementById("micBtn");
+        const pauseBtn = document.getElementById("pauseBtn");
+        const fileInput = document.getElementById("fileInput");
+
+        const qualitySelect = document.getElementById("qualitySelect");
+
+        const thresholdSlider = document.getElementById("thresholdSlider");
+        const smoothSlider = document.getElementById("smoothSlider");
+        const deformSlider = document.getElementById("deformSlider");
+        const detailSlider = document.getElementById("detailSlider");
+        const colorSlider = document.getElementById("colorSlider");
+        const colorSpeedSlider = document.getElementById("colorSpeedSlider");
+
+        micBtn.onclick = async function () {
+          await userStartAudio();
+
+          if (soundFile && soundFile.isPlaying()) {
+            soundFile.stop();
+          }
+
+          mic = new p5.AudioIn();
+
+          mic.start(function () {
+            fft.setInput(mic);
+            audioStarted = true;
+            paused = false;
+          });
+        };
+
+        pauseBtn.onclick = function () {
+          paused = !paused;
+
+          if (soundFile) {
+            if (paused && soundFile.isPlaying()) {
+              soundFile.pause();
+            } else if (!paused && soundFile.isLoaded()) {
+              soundFile.play();
+              fft.setInput(soundFile);
+            }
+          }
+
+          pauseBtn.textContent = paused ? "Продолжить" : "Пауза";
+        };
+
+        fileInput.onchange = async function (event) {
+          const file = event.target.files[0];
+
+          if (!file) return;
+
+          await userStartAudio();
+
+          if (mic) {
+            mic.stop();
+          }
+
+          if (soundFile && soundFile.isPlaying()) {
+            soundFile.stop();
+          }
+
+          const url = URL.createObjectURL(file);
+
+          soundFile = loadSound(url, function () {
+            soundFile.loop();
+            fft.setInput(soundFile);
+            audioStarted = true;
+            paused = false;
+          });
+        };
+
+        qualitySelect.onchange = function () {
+          settings.quality = qualitySelect.value;
+          applyQuality();
+          buildMesh();
+          updateText();
+        };
+
+        thresholdSlider.oninput = function () {
+          settings.threshold = Number(thresholdSlider.value);
+          updateText();
+        };
+
+        smoothSlider.oninput = function () {
+          settings.smoothness = Number(smoothSlider.value);
+          updateText();
+        };
+
+        deformSlider.oninput = function () {
+          settings.deformation = Number(deformSlider.value);
+          updateText();
+        };
+
+        detailSlider.oninput = function () {
+          settings.detail = Number(detailSlider.value);
+          updateText();
+        };
+
+        colorSlider.oninput = function () {
+          settings.colorPower = Number(colorSlider.value);
+          updateText();
+        };
+
+        colorSpeedSlider.oninput = function () {
+          settings.colorSpeed = Number(colorSpeedSlider.value);
+          updateText();
+        };
+
+        updateText();
+      }
+
+      function updateText() {
+        document.getElementById("qualityText").textContent = settings.quality;
+        document.getElementById("thresholdText").textContent =
+          settings.threshold;
+        document.getElementById("smoothText").textContent = settings.smoothness;
+        document.getElementById("deformText").textContent =
+          settings.deformation;
+        document.getElementById("detailText").textContent = settings.detail;
+        document.getElementById("colorText").textContent = settings.colorPower;
+        document.getElementById("colorSpeedText").textContent =
+          settings.colorSpeed;
+      }
+
+      function applyQuality() {
+        frameRate(qualityFps[settings.quality]);
+      }
+
+      function buildMesh() {
+        points = [];
+        cells = [];
+
+        const minSide = min(width, height);
+
+        if (settings.quality === "light") {
+          cellSize = max(42, minSide / 17);
+        } else if (settings.quality === "medium") {
+          cellSize = max(34, minSide / 22);
+        } else {
+          cellSize = max(28, minSide / 27);
+        }
+
+        const rowStep = cellSize * 0.86;
+
+        cols = ceil(width / cellSize) + 8;
+        rows = ceil(height / rowStep) + 8;
+
+        const startX = -cellSize * 3;
+        const startY = -rowStep * 3;
+
+        for (let y = 0; y < rows; y++) {
+          points[y] = [];
+
+          for (let x = 0; x < cols; x++) {
+            const offsetX = y % 2 === 0 ? 0 : cellSize * 0.5;
+
+            points[y][x] = {
+              baseX: startX + x * cellSize + offsetX,
+              baseY: startY + y * rowStep,
+              x: 0,
+              y: 0,
+              seed: hash2(x, y),
+            };
+          }
+        }
+
+        for (let y = 0; y < rows - 1; y++) {
+          for (let x = 0; x < cols - 1; x++) {
+            cells.push({
+              a: points[y][x],
+              b: points[y][x + 1],
+              c: points[y + 1][x + 1],
+              d: points[y + 1][x],
+              seed: hash2(x * 3.17, y * 7.91),
+            });
+          }
+        }
+      }
+
+      function updateAudio() {
+        if (!audioStarted || paused) {
+          bassSmooth = lerp(bassSmooth, 0, 0.025);
+          midSmooth = lerp(midSmooth, 0, 0.025);
+          trebleSmooth = lerp(trebleSmooth, 0, 0.025);
+          volumeSmooth = lerp(volumeSmooth, 0, 0.025);
+
+          bassMemory = lerp(bassMemory, 0, 0.018);
+          midMemory = lerp(midMemory, 0, 0.018);
+          trebleMemory = lerp(trebleMemory, 0, 0.018);
+
+          toneSmooth = lerp(toneSmooth, 0, 0.012);
+          toneMemory = lerp(toneMemory, 0, 0.01);
+
+          return;
+        }
+
+        const spectrum = fft.analyze();
+
+        const bassRaw = fft.getEnergy("bass") / 255;
+        const lowMidRaw = fft.getEnergy("lowMid") / 255;
+        const midRaw = fft.getEnergy("mid") / 255;
+        const highMidRaw = fft.getEnergy("highMid") / 255;
+        const trebleRaw = fft.getEnergy("treble") / 255;
+
+        const volumeRaw =
+          bassRaw * 0.35 +
+          lowMidRaw * 0.2 +
+          midRaw * 0.2 +
+          highMidRaw * 0.15 +
+          trebleRaw * 0.1;
+
+        const threshold = settings.threshold / 100;
+        const activated = smoothstep(threshold, 1.0, volumeRaw);
+
+        const bass = bassRaw * activated;
+        const mid = ((lowMidRaw + midRaw + highMidRaw) / 3) * activated;
+        const treble = trebleRaw * activated;
+        const volume = volumeRaw * activated;
+
+        const slow = map(settings.smoothness, 0, 100, 0.34, 0.035);
+
+        bassSmooth = lerp(bassSmooth, bass, slow);
+        midSmooth = lerp(midSmooth, mid, slow);
+        trebleSmooth = lerp(trebleSmooth, treble, slow);
+        volumeSmooth = lerp(volumeSmooth, volume, slow);
+
+        bassMemory = lerp(bassMemory, bassSmooth, 0.018);
+        midMemory = lerp(midMemory, midSmooth, 0.022);
+        trebleMemory = lerp(trebleMemory, trebleSmooth, 0.026);
+
+        let peakHz = 200;
+        let peakPower = 0;
+
+        const minColorHz = 200;
+        const maxColorHz = 1400;
+        const nyquist = sampleRate() / 2;
+
+        for (let i = 1; i < spectrum.length; i++) {
+          const hz = map(i, 0, spectrum.length - 1, 0, nyquist);
+
+          if (hz >= minColorHz && hz <= maxColorHz) {
+            const raw = spectrum[i] / 255;
+
+            const power = pow(raw, 1.85);
+
+            if (power > peakPower) {
+              peakPower = power;
+              peakHz = hz;
+            }
+          }
+        }
+
+        let tone = map(peakHz, minColorHz, maxColorHz, 0, 1);
+        tone = constrain(tone, 0, 1);
+
+        const toneActivation = smoothstep(threshold * 0.45, 1.0, volumeRaw);
+
+        const colorSpeed = map(settings.colorSpeed, 0, 100, 0.02, 0.48);
+
+        toneSmooth = lerp(toneSmooth, tone, colorSpeed * toneActivation);
+        toneMemory = lerp(toneMemory, toneSmooth, colorSpeed * 0.72);
+      }
+
+      function updateFlows() {
+        const baseSpeed = 0.0022;
+        const audioSpeed = volumeSmooth * 0.014;
+
+        flowA += baseSpeed + bassMemory * 0.007 + audioSpeed;
+        flowB += baseSpeed * 0.7 + midMemory * 0.011 + audioSpeed * 0.7;
+        flowC += baseSpeed * 0.45 + trebleMemory * 0.016 + audioSpeed * 0.45;
+      }
+
+      function updateMesh() {
+        const deformBase = map(settings.deformation, 0, 100, 0, 155);
+        const detail = map(settings.detail, 0, 100, 0.004, 0.022);
+
+        const bassAmp = deformBase * (0.12 + bassMemory * 2.45);
+        const midAmp = deformBase * (0.08 + midMemory * 1.65);
+        const trebleAmp = deformBase * (0.04 + trebleMemory * 1.05);
+
+        for (let y = 0; y < rows; y++) {
+          for (let x = 0; x < cols; x++) {
+            const p = points[y][x];
+
+            const nx = p.baseX;
+            const ny = p.baseY;
+
+            const cx = nx - width * 0.5;
+            const cy = ny - height * 0.5;
+
+            const distCenter = sqrt(cx * cx + cy * cy);
+            const angleCenter = atan2(cy, cx);
+
+            const largeWave =
+              sin(nx * 0.006 + flowA * 2.0) * cos(ny * 0.006 - flowA * 1.6);
+
+            const ornamentalWave =
+              sin((nx + ny) * detail + flowB * 2.7 + p.seed * TWO_PI) *
+              cos((nx - ny) * detail * 0.82 - flowB * 2.2);
+
+            const radialWave = sin(
+              distCenter * detail * 0.9 - flowC * 5.0 + p.seed * 3.0,
+            );
+
+            const fold =
+              largeWave * bassAmp +
+              ornamentalWave * midAmp +
+              radialWave * trebleAmp;
+
+            const dirX = cos(angleCenter + ornamentalWave * 0.8 + flowB) * fold;
+
+            const dirY = sin(angleCenter - ornamentalWave * 0.8 - flowB) * fold;
+
+            const latticePullX =
+              sin(y * 0.65 + flowA + p.seed) * bassAmp * 0.12;
+
+            const latticePullY =
+              cos(x * 0.65 - flowA + p.seed) * bassAmp * 0.12;
+
+            const calmReturn = 1.0 - volumeSmooth * 0.12;
+
+            p.x = nx + (dirX + latticePullX) * calmReturn;
+            p.y = ny + (dirY + latticePullY) * calmReturn;
+          }
+        }
+      }
+
+      function drawBackground() {
+        background(228, 58, 5, 100);
+
+        noStroke();
+
+        for (let i = 0; i < 9; i++) {
+          const r = map(i, 0, 8, width * 0.12, width * 0.86);
+          const alpha = map(i, 0, 8, 14, 0);
+
+          fill(215 + i * 4, 70, 16, alpha);
+          ellipse(width * 0.5, height * 0.48, r, r * 0.62);
+        }
+      }
+
+      function drawCells() {
+        noStroke();
+
+        const colorPower = settings.colorPower / 100;
+        const globalEnergy = constrain(volumeSmooth * 1.8, 0, 1);
+
+        const soundHue = getHueFromTone(toneMemory);
+
+        for (let i = 0; i < cells.length; i++) {
+          const cell = cells[i];
+
+          const cx = (cell.a.x + cell.b.x + cell.c.x + cell.d.x) * 0.25;
+          const cy = (cell.a.y + cell.b.y + cell.c.y + cell.d.y) * 0.25;
+
+          const ornamental =
+            sin(cx * 0.014 + flowB * 2.4 + cell.seed * TWO_PI) *
+            cos(cy * 0.014 - flowC * 1.7);
+
+          const localPulse = sin(
+            (cx + cy) * 0.008 + flowA * 3.0 + cell.seed * 6.0,
+          );
+
+          const cellVariation =
+            sin(cell.seed * TWO_PI + flowB * 0.45) * 12 + ornamental * 18;
+
+          const bassWarmth = bassMemory * 8;
+          const trebleCold = trebleMemory * 12;
+
+          const hueValue =
+            soundHue + cellVariation * 0.52 - bassWarmth + trebleCold;
+
+          const sat =
+            52 + colorPower * 36 + volumeSmooth * 22 + trebleMemory * 10;
+
+          const bri = 14 + colorPower * 44 + globalEnergy * 36 + localPulse * 7;
+
+          const alpha = 56 + colorPower * 38 + globalEnergy * 10;
+
+          fill(
+            wrapHue(hueValue),
+            constrain(sat, 36, 100),
+            constrain(bri, 12, 98),
+            constrain(alpha, 48, 100),
+          );
+
+          beginShape();
+          vertex(cell.a.x, cell.a.y);
+          vertex(cell.b.x, cell.b.y);
+          vertex(cell.c.x, cell.c.y);
+          vertex(cell.d.x, cell.d.y);
+          endShape(CLOSE);
+
+          const lineAlpha = 7 + colorPower * 7 + globalEnergy * 12;
+
+          stroke(wrapHue(hueValue + 14), 56, 96, lineAlpha);
+
+          strokeWeight(1);
+
+          line(cell.a.x, cell.a.y, cell.b.x, cell.b.y);
+          line(cell.b.x, cell.b.y, cell.c.x, cell.c.y);
+          line(cell.c.x, cell.c.y, cell.d.x, cell.d.y);
+          line(cell.d.x, cell.d.y, cell.a.x, cell.a.y);
+
+          noStroke();
+        }
+      }
+
+      function drawSoftGlow() {
+        const energy = constrain(volumeSmooth, 0, 1);
+
+        noFill();
+        strokeWeight(2);
+
+        for (let i = 0; i < 4; i++) {
+          const size = min(width, height) * (0.25 + i * 0.14 + energy * 0.06);
+          const hueValue = getHueFromTone(toneMemory) + i * 6;
+          const alpha = 5 + energy * 14 - i * 2;
+
+          stroke(wrapHue(hueValue), 80, 95, alpha);
+
+          beginShape();
+
+          for (let a = 0; a <= TWO_PI + 0.05; a += 0.05) {
+            const r =
+              size *
+              (1 +
+                sin(a * 6 + flowB * 2.5) * 0.035 +
+                cos(a * 10 - flowC * 2.0) * 0.022 * trebleMemory);
+
+            const x = width * 0.5 + cos(a) * r;
+            const y = height * 0.5 + sin(a) * r * 0.62;
+
+            vertex(x, y);
+          }
+
+          endShape();
+        }
+      }
+
+      function getHueFromTone(t) {
+        const stops = [
+          { t: 0.0, hue: 0 }, // 200 Hz
+          { t: 0.167, hue: 30 }, // 400 Hz
+          { t: 0.333, hue: 55 }, // 600 Hz
+          { t: 0.5, hue: 120 }, // 800 Hz
+          { t: 0.667, hue: 185 }, // 1000 Hz
+          { t: 0.833, hue: 225 }, // 1200 Hz
+          { t: 1.0, hue: 275 }, // 1400 Hz
+        ];
+
+        t = constrain(t, 0, 1);
+
+        for (let i = 0; i < stops.length - 1; i++) {
+          const a = stops[i];
+          const b = stops[i + 1];
+
+          if (t >= a.t && t <= b.t) {
+            const k = (t - a.t) / (b.t - a.t);
+            return lerp(a.hue, b.hue, k);
+          }
+        }
+
+        return stops[stops.length - 1].hue;
+      }
+
+      function smoothstep(edge0, edge1, x) {
+        const t = constrain((x - edge0) / (edge1 - edge0), 0, 1);
+        return t * t * (3 - 2 * t);
+      }
+
+      function hash2(x, y) {
+        const s = sin(x * 127.1 + y * 311.7) * 43758.5453123;
+        return s - floor(s);
+      }
+
+      function wrapHue(h) {
+        h = h % 360;
+
+        if (h < 0) {
+          h += 360;
+        }
+
+        return h;
+      }
+
+      function windowResized() {
+        resizeCanvas(windowWidth, windowHeight);
+        buildMesh();
+      }
+
+      const aboutBtn = document.getElementById("aboutBtn");
+      const aboutModal = document.getElementById("aboutModal");
+      const closeAbout = document.getElementById("closeAbout");
+
+      aboutBtn.onclick = function () {
+        aboutModal.classList.add("active");
+      };
+
+      function closeModal() {
+        aboutModal.classList.remove("active");
+      }
+
+      closeAbout.onclick = closeModal;
+
+      aboutModal.onclick = function (event) {
+        if (event.target === aboutModal) {
+          closeModal();
+        }
+      };
+    </script>
+  </body>
+</html>
